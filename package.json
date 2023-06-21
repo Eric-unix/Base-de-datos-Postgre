@@ -9,7 +9,7 @@
     "lint": "eslint"
   },
   "keywords": [],
-  "author": "Francisco Lopez <franlopbri@gmail.com>",
+  "author": ">",
   "license": "MIT",
   "devDependencies": {
     "eslint": "^8.41.0",
@@ -22,6 +22,7 @@
     "@faker-js/faker": "^8.0.1",
     "@hapi/boom": "^10.0.1",
     "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "joi": "^17.9.2",
     "pg": "^8.11.0"
