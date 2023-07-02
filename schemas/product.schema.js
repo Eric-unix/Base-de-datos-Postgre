@@ -8,6 +8,8 @@ const image = Joy.string().uri()
 const categoryId = Joy.number().integer()
 const limit = Joy.number().integer()
 const offset = Joy.number().integer()
+const price_min = Joy.number().integer()
+const price_max = Joy.number().integer()
 
 const createProductSchema = Joy.object({
     name: name.required(),
@@ -30,7 +32,13 @@ const getProductSchema = Joi.object({
 
 const queryProductSchema = Joy.object({
   limit,
-  offset
+  offset,
+  price,
+  price_min,
+  price_max: price_max.when('price_min', {
+      is:Joy.number().integer(),
+      then: Joy.required()
+  })
 })
 
 module.exports = {
