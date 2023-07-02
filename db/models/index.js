@@ -1,15 +1,12 @@
-const  {User, UserSchema} = require('./user.model');
-const  {User, UserSchema} = require('./user.model');
-const  {User, UserSchema} = require('./user.model');
-const  {User, UserSchema} = require('./user.model');
-const  {User, UserSchema} = require('./user.model');
+const { Customer, CustomerSchema } = require("./customerModel")
+const { User, userSchema } = require("./userModel")
 
-function setupModels(sequelize){
-    User.init(UserSchema, User.config(sequelize));
-    User.init(UserSchema, User.config(sequelize));
-    User.init(UserSchema, User.config(sequelize));
-    User.init(UserSchema, User.config(sequelize));
-    User.init(UserSchema, User.config(sequelize));
+
+const setupModels = (sequelize) => {
+    User.init(userSchema, User.config(sequelize))
+    Customer.init(CustomerSchema, Customer.config(sequelize))
+
+    Customer.associate(sequelize.models)
 }
 
-module.exports = setupModels;
+module.exports = setupModels
