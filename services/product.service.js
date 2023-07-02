@@ -1,91 +1,78 @@
-const { faker } = require('@faker-js/faker');
-const boom = require('@hapi/boom');
+const { notFound, conflict } = require("@hapi/boom")
+const faker = require("faker")
+const pool = require("../libs/postgresPool")
+const {models} = require("../libs/sequelize")
+const { Op } = require("sequelize")
 
-const sequelize = require('../libs/sequelize');
+class ProductService {
 
-class ProductsService {
-
-  constructor() {
-    this.products = [];
-    this.generate();
-    this.pool = pool;
-    this.pool.on('error', (err) => console.error(err));
-  }
-
-  async generate() {
-    const limit = 100;
-    for(let i = 0; i < limit; i++){
-      this.products.push({
-        id: faker.string.uuid(),
-        name: faker.commerce.productName(),
-        price: parseInt(faker.commerce.price(), 10),
-        image: faker.image.url(),
-        isBlocked: faker.datatype.boolean()
-      });
+    constructor(){
+        this.products = []
+        this.generate()
+        this.pool = pool
+        this.pool.on("error", (err) => {
+            console.log(err);
+        }) 
     }
-  }
 
-  async create(data) {
-    const newProduct = {
-      id: faker.string.uuid(),
-      ...data
+    async generate(){
+        const limit = 100
     }
-    this.products.push(newProduct);
-    return newProduct;
-  }
 
-  async getAll() {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        resolve(this.products)
-      }, 2000);
-    });
-  }
+    async create(data){
+        const newProduct = await models.Product.create(data)
+        return newProduct
+    }
 
-  async getOne(id) {
-    return new Promise((resolve, reject) => {
-      const product = this.products.find(item => item.id === id);
-      if(!product){
-        reject(boom.notFound('product not found!'));
-      }
-      if(product.isBlocked){
-        reject(boom.conflict('Not access permit'));
-      }
-      //const name = this.getTotal();
-      resolve(product);
-    })
-
-  }
-
-  async find(){
-    const query = 'SELECT * FROM tasks';
-    const [data]= await sequelize.query(query);
-    return data;
-  }
-
-  async update(id, data) {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const index = this.products.findIndex(item => item.id === id);
-        if(index === -1) {
-          reject(boom.notFound('product not found!'));
+    async find(query){
+        const options = {
+            include: ['category'],
+            where: {}
         }
-        const product = this.products[index];
-        this.products[index] = {...product, ...data};
-        resolve(this.products[index]);
-      }, 2000);
-    });
-  }
-
-  async delete(id) {
-    const index = this.products.findIndex(item => item.id === id);
-    if(index === -1){
-      throw boom.notFound('product not found!');
+        const {limit, offset, price, price_min, price_max} = query
+        if(limit && offset){
+            options.limit = limit
+            options.offset = offset
+        }
+        if(price){
+            options.where.price = price
+        }
+        if(price_min && price_max){
+            options.where.price = {[Op.gte]: price_min, [Op.lte]: price_max}
+        }
+        const products = await models.Product.findAll(options)
+        return products
     }
-    this.products.splice(index, 1);
-    return { id };
-  }
-  
+
+    async findOne(id){
+        const product = await models.Product.findByPk(id)
+        if(!product){
+            throw notFound("Product not found")
+        }
+        if(product.isBlock){
+            throw conflict("Product is blocked")
+        }
+        return product
+    }
+
+    async update(id, data){
+        const index = this.products.findIndex(product => product.id === id)
+        if(index === -1){
+            throw notFound("Product not found")
+        }
+        const product = this.products[index]
+        this.products[index] = {id, product, ...data}
+        return this.products[index]
+    }
+
+    async delete(id){{
+        const index = this.products.findIndex(product => product.id === id)
+        if(index === -1){
+            return null
+        }
+        this.products.splice(index, 1)
+        return {message: 'deleted'}
+    }}
 }
 
-module.exports = ProductsService;
+module.exports = ProductService
